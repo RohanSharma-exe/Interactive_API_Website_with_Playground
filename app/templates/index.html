@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+
+{% block title %}Playground - API Website{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto h-full flex flex-col">
+    <!-- URL Bar -->
+    <div
+        class="bg-white dark:bg-dark-lighter p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex gap-3 items-center mb-6">
+        <select id="methodSelect"
+            class="bg-gray-50 dark:bg-dark border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2.5 font-semibold text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow w-28">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+            <option value="PATCH">PATCH</option>
+        </select>
+        <input type="text" id="urlInput" placeholder="Enter Request URL"
+            class="flex-1 bg-gray-50 dark:bg-dark border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2.5 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow">
+        <button id="sendBtn"
+            class="bg-primary hover:bg-indigo-600 text-white font-bold py-2.5 px-6 rounded-lg shadow-md transition-transform transform active:scale-95 flex items-center gap-2">
+            <i data-lucide="send" class="w-4 h-4"></i> Send
+        </button>
+    </div>
+
+    <!-- Request/Response Split View -->
+    <div class="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
+        <!-- Request Section -->
+        <div
+            class="flex-1 flex flex-col bg-white dark:bg-dark-lighter rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <!-- Tabs -->
+            <div class="flex border-b border-gray-200 dark:border-gray-700">
+                <button
+                    class="tab-btn active px-6 py-3 text-sm font-medium border-b-2 border-primary text-primary transition-colors"
+                    data-target="tab-params">Params</button>
+                <button
+                    class="tab-btn px-6 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                    data-target="tab-auth">Auth</button>
+                <button
+                    class="tab-btn px-6 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                    data-target="tab-headers">Headers</button>
+                <button
+                    class="tab-btn px-6 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                    data-target="tab-body">Body</button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="p-4 flex-1 overflow-y-auto">
+                <!-- Params Tab -->
+                <div id="tab-params" class="tab-content block h-full">
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Query Parameters</p>
+                    <div id="paramsContainer" class="space-y-2">
+                        <!-- Dynamic inputs will be here -->
+                        <div class="flex gap-2">
+                            <input type="text" placeholder="Key"
+                                class="param-key flex-1 bg-gray-50 dark:bg-dark border border-gray-200 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                            <input type="text" placeholder="Value"
+                                class="param-value flex-1 bg-gray-50 dark:bg-dark border border-gray-200 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                        </div>
+                    </div>
+                    <button id="addParamBtn" class="mt-4 text-xs font-medium text-primary hover:underline">+ Add
+                        Parameter</button>
+                </div>
+
+                <!-- Auth Tab -->
+                <div id="tab-auth" class="tab-content hidden h-full">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Authorization
+                                Type</label>
+                            <select id="authType"
+                                class="w-full bg-gray-50 dark:bg-dark border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                                <option value="none">No Auth</option>
+                                <option value="bearer">Bearer Token</option>
+                                <option value="basic">Basic Auth</option>
+                            </select>
+                        </div>
+                        <div id="authBearer" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Token</label>
+                            <input type="text" id="authToken" placeholder="Enter Bearer Token"
+                                class="w-full bg-gray-50 dark:bg-dark border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                        </div>
+                        <div id="authBasic" class="hidden space-y-2">
+                            <input type="text" id="authUsername" placeholder="Username"
+                                class="w-full bg-gray-50 dark:bg-dark border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                            <input type="password" id="authPassword" placeholder="Password"
+                                class="w-full bg-gray-50 dark:bg-dark border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Headers Tab -->
+                <div id="tab-headers" class="tab-content hidden h-full">
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Request Headers</p>
+                    <div id="headersContainer" class="space-y-2">
+                        <div class="flex gap-2">
+                            <input type="text" placeholder="Key"
+                                class="header-key flex-1 bg-gray-50 dark:bg-dark border border-gray-200 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                            <input type="text" placeholder="Value"
+                                class="header-value flex-1 bg-gray-50 dark:bg-dark border border-gray-200 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                        </div>
+                    </div>
+                    <button id="addHeaderBtn" class="mt-4 text-xs font-medium text-primary hover:underline">+ Add
+                        Header</button>
+                </div>
+
+                <!-- Body Tab -->
+                <div id="tab-body" class="tab-content hidden h-full flex flex-col">
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Request Body (JSON)</p>
+                    <textarea id="jsonBody"
+                        class="flex-1 w-full bg-gray-900 text-gray-200 font-mono text-xs p-3 rounded-lg border border-gray-700 focus:outline-none focus:border-primary resize-none"
+                        placeholder="{ 'key': 'value' }"></textarea>
+                    <div id="jsonError" class="text-red-500 text-xs mt-1 hidden">Invalid JSON</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Response Section -->
+        <div
+            class="flex-1 flex flex-col bg-white dark:bg-dark-lighter rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div
+                class="px-6 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
+                <span class="text-sm font-semibold text-gray-600 dark:text-gray-300">Response</span>
+                <span id="statusCode" class=""></span>
+            </div>
+            <div class="flex-1 bg-white dark:bg-[#282c34] overflow-auto relative group">
+                <button id="copyBtn"
+                    class="absolute top-2 right-2 bg-gray-700 text-white rounded p-1 opacity-0 group-hover:opacity-100 transition-opacity text-xs z-10">Copy</button>
+                <pre
+                    class="m-0 p-4 h-full text-xs font-mono"><code id="responseOutput" class="language-json h-full block"></code></pre>
+            </div>
+            <div
+                class="px-4 py-2 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 flex justify-between">
+                <span id="responseSize">0 KB</span>
+                <span id="responseTime">0 ms</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- UI Logic ---
+        const tabs = document.querySelectorAll('.tab-btn');
+        const contents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => {
+                    t.classList.remove('border-primary', 'text-primary');
+                    t.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+                });
+                tab.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+                tab.classList.add('border-primary', 'text-primary');
+
+                contents.forEach(c => c.classList.add('hidden'));
+                document.getElementById(tab.dataset.target).classList.remove('hidden');
+            });
+        });
+
+        const authType = document.getElementById('authType');
+        authType.addEventListener('change', () => {
+            document.getElementById('authBearer').classList.add('hidden');
+            document.getElementById('authBasic').classList.add('hidden');
+            if (authType.value === 'bearer') document.getElementById('authBearer').classList.remove('hidden');
+            if (authType.value === 'basic') document.getElementById('authBasic').classList.remove('hidden');
+        });
+
+        // --- History Logic ---
+        const historyList = document.getElementById('historyList');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        let history = JSON.parse(localStorage.getItem('apiHistory') || '[]');
+
+        function renderHistory() {
+            historyList.innerHTML = '';
+            history.forEach((item, index) => {
+                const el = document.createElement('div');
+                el.className = 'p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 cursor-pointer hover:border-primary dark:hover:border-primary transition-colors group relative';
+                el.onclick = () => loadRequest(item);
+
+                let methodColor = 'text-green-500';
+                if (item.method === 'POST') methodColor = 'text-blue-500';
+                if (item.method === 'DELETE') methodColor = 'text-red-500';
+                if (item.method === 'PUT') methodColor = 'text-yellow-500';
+
+                el.innerHTML = `
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-xs font-bold ${methodColor}">${item.method}</span>
+                        <span class="text-[10px] text-gray-400">${item.date || ''}</span>
+                    </div>
+                    <div class="text-xs text-gray-600 dark:text-gray-300 truncate w-full" title="${item.url}">${item.url}</div>
+                `;
+                historyList.appendChild(el);
+            });
+        }
+
+        renderHistory();
+
+        clearHistoryBtn.addEventListener('click', () => {
+            history = [];
+            localStorage.setItem('apiHistory', JSON.stringify(history));
+            renderHistory();
+        });
+
+        function addToHistory(req) {
+            const newEntry = {
+                ...req,
+                date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+            history.unshift(newEntry);
+            if (history.length > 20) history.pop();
+            localStorage.setItem('apiHistory', JSON.stringify(history));
+            renderHistory();
+        }
+
+        function loadRequest(req) {
+            document.getElementById('methodSelect').value = req.method;
+            document.getElementById('urlInput').value = req.url;
+            // Load Body
+            if (req.body) document.getElementById('jsonBody').value = JSON.stringify(req.body, null, 2);
+            else document.getElementById('jsonBody').value = '';
+
+            // Note: Populating headers/params dynamically is a bit more complex,
+            // for simplicity just doing method/url/body for now. 
+            // Ideally we'd rebuild the DOM inputs for params/headers.
+        }
+
+        // --- Request Logic ---
+        const sendBtn = document.getElementById('sendBtn');
+        const responseOutput = document.getElementById('responseOutput');
+        const statusCode = document.getElementById('statusCode');
+        const responseSize = document.getElementById('responseSize');
+        const responseTime = document.getElementById('responseTime');
+        const jsonBody = document.getElementById('jsonBody');
+
+        sendBtn.addEventListener('click', async () => {
+            const method = document.getElementById('methodSelect').value;
+            const url = document.getElementById('urlInput').value;
+
+            if (!url) return alert("Please enter a URL");
+
+            // Collect Headers
+            const headers = {};
+            document.querySelectorAll('.header-key').forEach((keyInput, idx) => {
+                const valInput = document.querySelectorAll('.header-value')[idx];
+                if (keyInput.value && valInput.value) headers[keyInput.value] = valInput.value;
+            });
+
+            // Auth
+            if (authType.value === 'bearer') {
+                const token = document.getElementById('authToken').value;
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+            } else if (authType.value === 'basic') {
+                const u = document.getElementById('authUsername').value;
+                const p = document.getElementById('authPassword').value;
+                if (u && p) headers['Authorization'] = 'Basic ' + btoa(u + ':' + p);
+            }
+
+            // Body
+            let body = null;
+            if (['POST', 'PUT', 'PATCH'].includes(method) && jsonBody.value) {
+                try {
+                    body = JSON.parse(jsonBody.value);
+                    document.getElementById('jsonError').classList.add('hidden');
+                } catch (e) {
+                    document.getElementById('jsonError').classList.remove('hidden');
+                    return;
+                }
+            }
+
+            const reqPayload = { method, url, headers, body };
+            addToHistory(reqPayload);
+
+            // Fetch
+            responseOutput.innerHTML = 'Loading...';
+            statusCode.textContent = '';
+            statusCode.className = '';
+
+            const startTime = performance.now();
+
+            try {
+                const res = await fetch('/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(reqPayload)
+                });
+
+                const data = await res.json();
+                const endTime = performance.now();
+                responseTime.textContent = (endTime - startTime).toFixed(0) + ' ms';
+
+                // Status
+                let statusClass = 'text-green-500 font-bold';
+                if (data.status >= 400) statusClass = 'text-yellow-500 font-bold';
+                if (data.status >= 500) statusClass = 'text-red-500 font-bold';
+                statusCode.textContent = data.status || 'Error';
+                statusCode.className = statusClass;
+
+                // Data
+                if (data.data) {
+                    const jsonStr = JSON.stringify(data.data, null, 2);
+                    responseOutput.textContent = jsonStr;
+                    responseSize.textContent = (new Blob([jsonStr]).size / 1024).toFixed(2) + ' KB';
+                    hljs.highlightElement(responseOutput);
+                } else if (data.error) {
+                    responseOutput.textContent = data.error;
+                    statusCode.textContent = 'ERR';
+                    statusCode.className = 'text-red-500 font-bold';
+                }
+
+            } catch (err) {
+                responseOutput.textContent = err.message;
+            }
+        });
+
+        // Copy Button
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            navigator.clipboard.writeText(responseOutput.textContent);
+        });
+
+        // Dynamic Inputs (Simple implementation)
+        const addField = (containerId, clsKey, clsVal) => {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = 'flex gap-2';
+            div.innerHTML = `
+                <input type="text" placeholder="Key" class="${clsKey} flex-1 bg-gray-50 dark:bg-dark border border-gray-200 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                <input type="text" placeholder="Value" class="${clsVal} flex-1 bg-gray-50 dark:bg-dark border border-gray-200 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-primary">
+            `;
+            container.appendChild(div);
+        }
+
+        document.getElementById('addParamBtn').addEventListener('click', () => addField('paramsContainer', 'param-key', 'param-value'));
+        document.getElementById('addHeaderBtn').addEventListener('click', () => addField('headersContainer', 'header-key', 'header-value'));
+    });
+</script>
+{% endblock %}
